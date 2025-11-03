@@ -285,7 +285,8 @@ const ChatScreen = () => {
   );
 };
 
-export default ChatScreen;
+export default ChatScreen;<Stack.Screen name="Profile" component={ProfileScreen} />
+<Stack.Screen name="Chat" component={ChatScreen} />
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 10 },
