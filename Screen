@@ -285,12 +285,4 @@ const ChatScreen = () => {
   );
 };
 
-export default ChatScreen;<Stack.Screen name="Profile" component={ProfileScreen} />
-<Stack.Screen name="Chat" component={ChatScreen} />
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
-  input: { borderWidth: 1, padding: 10, marginVertical: 10 },
-  myMessage: { backgroundColor: "#DCF8C6", padding: 10, borderRadius: 8, marginVertical: 4, alignSelf: "flex-end" },
-  otherMessage: { backgroundColor: "#EEE", padding: 10, borderRadius: 8, marginVertical: 4, alignSelf: "flex-start" }
-});
+export default ChatScreen;
