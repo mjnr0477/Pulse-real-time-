@@ -1,0 +1,12 @@
+Launch
+ ├── Already Logged In? → Yes → Home
+ │                          No → Login → Register → Home
+Home
+ ├── Go to Profile
+ ├── Go to Chat
+ └── Post content / view feed
+Profile
+ ├── Edit profile
+ └── Logout → Login
+Chat
+ └── Send/receive messages
