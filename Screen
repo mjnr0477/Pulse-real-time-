@@ -155,4 +155,141 @@ function HomeScreen({ navigation }) {
       />
     </View>
   );
-}
+}// screens/ProfileScreen.js
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, Button, Image, StyleSheet } from "react-native";
+import { getAuth, updateProfile, signOut } from "firebase/auth";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
+
+const ProfileScreen = ({ navigation }) => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  const [name, setName] = useState(user?.displayName || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [bio, setBio] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setBio(docSnap.data().bio || "");
+      }
+      setLoading(false);
+    };
+    fetchUserData();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await updateProfile(user, { displayName: name });
+      const docRef = doc(db, "users", user.uid);
+      await updateDoc(docRef, { bio });
+      alert("Profile updated successfully!");
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigation.replace("Login");
+  };
+
+  if (loading) return <Text>Loading...</Text>;
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Profile</Text>
+      <Text>Email: {email}</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Name"
+        value={name}
+        onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Bio"
+        value={bio}
+        onChangeText={setBio}
+      />
+      <Button title="Save Changes" onPress={handleSave} />
+      <Button title="Logout" color="red" onPress={handleLogout} />
+    </View>
+  );
+};
+
+export default ProfileScreen;
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20 },
+  title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
+  input: { borderWidth: 1, padding: 10, marginVertical: 10 }
+});// screens/ChatScreen.js
+import React, { useState, useEffect } from "react";
+import { View, TextInput, Button, FlatList, Text, StyleSheet } from "react-native";
+import { getAuth } from "firebase/auth";
+import { db } from "../firebase";
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore";
+
+const ChatScreen = () => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    const q = query(collection(db, "chats"), orderBy("createdAt", "asc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleSend = async () => {
+    if (!message.trim()) return;
+    await addDoc(collection(db, "chats"), {
+      text: message.trim(),
+      userId: user.uid,
+      displayName: user.displayName,
+      createdAt: serverTimestamp()
+    });
+    setMessage("");
+  };
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={messages}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={item.userId === user.uid ? styles.myMessage : styles.otherMessage}>
+            <Text style={{ fontWeight: "bold" }}>{item.displayName}</Text>
+            <Text>{item.text}</Text>
+          </View>
+        )}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Type a message..."
+        value={message}
+        onChangeText={setMessage}
+      />
+      <Button title="Send" onPress={handleSend} />
+    </View>
+  );
+};
+
+export default ChatScreen;
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 10 },
+  input: { borderWidth: 1, padding: 10, marginVertical: 10 },
+  myMessage: { backgroundColor: "#DCF8C6", padding: 10, borderRadius: 8, marginVertical: 4, alignSelf: "flex-end" },
+  otherMessage: { backgroundColor: "#EEE", padding: 10, borderRadius: 8, marginVertical: 4, alignSelf: "flex-start" }
+});
